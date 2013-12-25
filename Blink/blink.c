@@ -12,11 +12,13 @@
 //
 // Description:
 // 	Basic blink program to use for learning and environment setup
+//
+// Notes:
+//	This code will be unnecessarily heavily commented for my own learning purposes
 //****************************************************************************************************
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "inc/tm4c123gh6pm.h"
 #include "inc/hw_gpio.h"
 #include "inc/hw_memmap.h"
 #include "inc/hw_sysctl.h"
@@ -35,8 +37,8 @@ int main(){
 	ROM_GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, LED_RED|LED_BLUE|LED_GREEN);
 
 	for(;;){
-		ROM_GPIOPinWrite(GPIO_PORTF_BASE, LED_RED|LED_GREEN|LED_BLUE, LED_BLUE);
-		ROM_SysCtlDelay(9000000);
+		ROM_GPIOPinWrite(GPIO_PORTF_BASE, LED_RED|LED_GREEN|LED_BLUE, LED_RED|LED_BLUE);
+		ROM_SysCtlDelay(5000000);
 		ROM_GPIOPinWrite(GPIO_PORTF_BASE, LED_RED|LED_GREEN|LED_BLUE, 0);
 		ROM_SysCtlDelay(5000000);
 	}
