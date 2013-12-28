@@ -17,7 +17,7 @@
 //
 // Notes:
 //	This code will be unnecessarily heavily commented for my own learning purposes. The binary 
-//	file produced by this version of the code is 1516 bytes.
+//	file produced by this version of the code is 820 bytes.
 //****************************************************************************************************
 
 // Standard libraries
@@ -29,8 +29,10 @@
 #include "inc/hw_memmap.h"	// Memory map	
 
 // Anything from the "driverlib" folder has the actual functions (drivers)
-#include "driverlib/gpio.h"	// Only included for definitions since all functions are called from ROM
-#include "driverlib/sysctl.h"	// Only included for definitions since all functions are called from ROM
+#include "driverlib/rom.h"
+#include "driverlib/rom_map.h"	// Used to automatically switch between ROM and program functions depending on availability
+#include "driverlib/gpio.h"
+#include "driverlib/sysctl.h"
 
 // GPIO_PIN_X is defined in gpio.h
 #define LED_RED GPIO_PIN_1
@@ -41,16 +43,16 @@ int main(){
 
 	// System clock set to run at 50 MHz from PLL with crystal ref.
 	// With EK-TM4C123GXL Launchpad, no need to change SYSCTL_XTAL_16MHZ to anything else
-	SysCtlClockSet(SYSCTL_SYSDIV_4|SYSCTL_USE_PLL|SYSCTL_XTAL_16MHZ|SYSCTL_OSC_MAIN);
-	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
-	GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, LED_RED|LED_BLUE|LED_GREEN);
+	MAP_SysCtlClockSet(SYSCTL_SYSDIV_4|SYSCTL_USE_PLL|SYSCTL_XTAL_16MHZ|SYSCTL_OSC_MAIN);
+	MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
+	MAP_GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, LED_RED|LED_BLUE|LED_GREEN);
 
 	while(1){
-		GPIOPinWrite(GPIO_PORTF_BASE, LED_RED|LED_GREEN|LED_BLUE, LED_GREEN|LED_RED|LED_BLUE);
-		// SysCtlDelay and ROM_SysCtlDelay behave differently, why? Equation below doesn't work with SysCtlDelay, only ROM_SysCtlDelay!
-		SysCtlDelay(8333333);	// Number of loop iterations to perform @ 3 cycles/loop. Input = (DesiredTime*Frequency)/3
-		GPIOPinWrite(GPIO_PORTF_BASE, LED_RED|LED_GREEN|LED_BLUE, 0);
-		SysCtlDelay(8333333);
+		MAP_GPIOPinWrite(GPIO_PORTF_BASE, LED_RED|LED_GREEN|LED_BLUE, LED_GREEN|LED_RED|LED_BLUE);
+		// SysCtlDelay and ROM_SysCtlDelay behave differently, see http://e2e.ti.com/support/microcontrollers/tiva_arm/f/908/t/256106.aspx
+		MAP_SysCtlDelay(8333333);	// Number of loop iterations to perform @ 3 cycles/loop using ROM. Not Accurate. Input = (DesiredTime*Frequency)/3
+		MAP_GPIOPinWrite(GPIO_PORTF_BASE, LED_RED|LED_GREEN|LED_BLUE, 0);
+		MAP_SysCtlDelay(8333333);
 	}
 }
 
