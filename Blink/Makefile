@@ -63,6 +63,7 @@ LDFLAGS=-T                 \
 	--gc-sections      \
 	-o a.out startup_gcc.o ${FILENAME}.o \
 	${DRIVOBJROOT}/sysctl.o \
+	${DRIVOBJROOT}/gpio.o   \
 
 
 

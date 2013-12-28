@@ -22,3 +22,5 @@ Since I develop on a Mac, here's what I did to get everything working properly:
 The last three lines of the Makefile from [this](https://github.com/madvoid/Tiva-Test/commit/182c6fb441e81f4dc0d1d8470427f55eae63c145) commit show the commands that I use to compile code and upload it to the Launchpad. You will need to change the file names to whatever you are using, and change the path after the `-I` flag to wherever your TivaWare base folder is located. I gathered all of these flags by a combination of [this](http://recursive-labs.com/blog/2012/10/28/stellaris-launchpad-gnu-linux-getting-started/) tutorial and examining the flags from the makefiles included with TivaWare. The files `startup_gcc.c` and `blink.ld` were taken directly from the TivaWare examples.
 
 Alternatively, you could just run the makefile to compile the code. As an alternative to running lm4flash, `make upload` will upload the binary application file to the Launchpad.
+
+Due to my inability to write proper makefiles, for any `driverlib` files that are used in the code, the corresponding `.o` file must be added to the Makefile's linker flags.
