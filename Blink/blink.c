@@ -50,7 +50,7 @@ int main(){
 	while(1){
 		MAP_GPIOPinWrite(GPIO_PORTF_BASE, LED_RED|LED_GREEN|LED_BLUE, LED_GREEN|LED_RED|LED_BLUE);
 		// SysCtlDelay and ROM_SysCtlDelay behave differently, see http://e2e.ti.com/support/microcontrollers/tiva_arm/f/908/t/256106.aspx
-		MAP_SysCtlDelay(8333333);	// Number of loop iterations to perform @ 3 cycles/loop using ROM. Not Accurate. Input = (DesiredTime*Frequency)/3
+		MAP_SysCtlDelay(8333333);	// Number of loop iterations to perform @ 3 cycles/loop using ROM. Not Accurate. Input = (DesiredTime*ClockFrequency)/3
 		MAP_GPIOPinWrite(GPIO_PORTF_BASE, LED_RED|LED_GREEN|LED_BLUE, 0);
 		MAP_SysCtlDelay(8333333);
 	}

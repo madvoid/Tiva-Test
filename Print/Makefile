@@ -64,6 +64,9 @@ LDFLAGS=-T                 \
 	-o a.out startup_gcc.o ${FILENAME}.o \
 	${DRIVOBJROOT}/sysctl.o \
 	${DRIVOBJROOT}/gpio.o   \
+        ${DRIVOBJROOT}/fpu.o    \
+        ${DRIVOBJROOT}/uart.o   \
+        uartstdio.o \
 
 
 
@@ -71,7 +74,7 @@ LDFLAGS=-T                 \
 # Rules
 # ----------------------------------------------------------------------------------------------------
 all:
-	${CC} ${FILENAME}.c startup_gcc.c ${CFLAGS}
+	${CC} ${FILENAME}.c startup_gcc.c ${ROOT}/utils/uartstdio.c ${CFLAGS}
 	${LD} ${LDFLAGS} 
 	${OBJCOPY} -O binary a.out ${FILENAME}.bin
 
