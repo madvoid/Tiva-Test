@@ -38,7 +38,9 @@ ROOT=/Users/Nipun/Documents/TivaWare
 DRIVOBJROOT=${ROOT}/driverlib/gcc
 
 # Compiler flags
-CFLAGS=-g                  \
+CFLAGS=${FILENAME}.c       \
+       startup_gcc.c       \
+       -g                  \
        -mthumb             \
        ${CPU}              \
        ${FPU}              \
@@ -62,11 +64,11 @@ LDFLAGS=-T                 \
         --entry ResetISR   \
 	--gc-sections      \
 	-o a.out startup_gcc.o ${FILENAME}.o \
-	${DRIVOBJROOT}/sysctl.o \
-	${DRIVOBJROOT}/gpio.o   \
         ${DRIVOBJROOT}/fpu.o    \
+	${DRIVOBJROOT}/gpio.o   \
+        ${DRIVOBJROOT}/interrupt.o \
+	${DRIVOBJROOT}/sysctl.o \
         ${DRIVOBJROOT}/uart.o   \
-        uartstdio.o \
 
 
 
@@ -74,7 +76,7 @@ LDFLAGS=-T                 \
 # Rules
 # ----------------------------------------------------------------------------------------------------
 all:
-	${CC} ${FILENAME}.c startup_gcc.c ${ROOT}/utils/uartstdio.c ${CFLAGS}
+	${CC} ${CFLAGS}
 	${LD} ${LDFLAGS} 
 	${OBJCOPY} -O binary a.out ${FILENAME}.bin
 
