@@ -81,27 +81,27 @@ void ConfigureUART(){
 int main(){
 
 	// Enable lazy stacking. What is that?
-    	MAP_FPULazyStackingEnable();
+	MAP_FPULazyStackingEnable();
 
 	// System clock set to run at 50 MHz from PLL with crystal ref.
-    	MAP_SysCtlClockSet(SYSCTL_SYSDIV_4|SYSCTL_USE_PLL|SYSCTL_XTAL_16MHZ|SYSCTL_OSC_MAIN);
+	MAP_SysCtlClockSet(SYSCTL_SYSDIV_4|SYSCTL_USE_PLL|SYSCTL_XTAL_16MHZ|SYSCTL_OSC_MAIN);
 
 	// Enable LEDs for various uses
-        MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
-        MAP_GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, LED_RED|LED_BLUE|LED_GREEN);
+	MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
+	MAP_GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, LED_RED|LED_BLUE|LED_GREEN);
 
 	// Configure UART
-    	ConfigureUART();
+	ConfigureUART();
 
 	// Print!
-    	UARTprintf("Hello, world!\n");
+	UARTprintf("Hello, world!\n");
 	UARTprintf("Clock Speed: %d",MAP_SysCtlClockGet());
 	UARTprintf("\n");
 
 
 	// Blink LED
-    	while(1)
-    	{
+	while(1)
+	{
 		UARTprintf("LED On\n");
 		MAP_GPIOPinWrite(GPIO_PORTF_BASE, LED_RED|LED_GREEN|LED_BLUE, LED_GREEN|LED_RED|LED_BLUE);
 		MAP_SysCtlDelay(MAP_SysCtlClockGet() * blinkTime / 3);
@@ -109,6 +109,6 @@ int main(){
 		UARTprintf("LED Off\n");
 		MAP_GPIOPinWrite(GPIO_PORTF_BASE, LED_RED|LED_GREEN|LED_BLUE, 0);
 		MAP_SysCtlDelay(MAP_SysCtlClockGet() * blinkTime / 3);
-    	}
+	}
 }
 
