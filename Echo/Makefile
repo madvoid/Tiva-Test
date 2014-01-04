@@ -40,6 +40,7 @@ DRIVOBJROOT=${ROOT}/driverlib/gcc
 # Compiler flags
 CFLAGS=${FILENAME}.c       \
        startup_gcc.c       \
+       ${ROOT}/utils/uartstdio.c \
        -g                  \
        -mthumb             \
        ${CPU}              \
@@ -69,6 +70,7 @@ LDFLAGS=-T                 \
         ${DRIVOBJROOT}/interrupt.o \
 	${DRIVOBJROOT}/sysctl.o \
         ${DRIVOBJROOT}/uart.o   \
+        uartstdio.o \
 
 
 

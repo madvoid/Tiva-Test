@@ -14,6 +14,7 @@
 // 	Basic serial send and receive program for learning
 //
 // Notes:
+//	Keep interrupts as short as possible
 //
 //****************************************************************************************************
 
@@ -33,6 +34,7 @@
 #include "driverlib/sysctl.h"
 #include "driverlib/uart.h"
 
+#include "utils/uartstdio.h"
 
 
 
@@ -48,6 +50,7 @@
 void UARTIntHandler(void){
 
 	uint32_t ui32Status;
+	int32_t recChar;
 
 	// Get the interrrupt status. What is interrupt status?
 	ui32Status = ROM_UARTIntStatus(UART0_BASE, true);
@@ -56,14 +59,22 @@ void UARTIntHandler(void){
 	ROM_UARTIntClear(UART0_BASE, ui32Status);
 
 	while(ROM_UARTCharsAvail(UART0_BASE)){
-		// Read the next character from the UART and write it back to the UART.
-		ROM_UARTCharPutNonBlocking(UART0_BASE, ROM_UARTCharGetNonBlocking(UART0_BASE));
+		recChar = ROM_UARTCharGetNonBlocking(UART0_BASE);	
+
+		// Write back to UART
+		//ROM_UARTCharPutNonBlocking(UART0_BASE, ROM_UARTCharGetNonBlocking(UART0_BASE));
+		ROM_UARTCharPutNonBlocking(UART0_BASE, recChar);
 
 		// Blink the LED to show a character transfer is occuring.
 		ROM_GPIOPinWrite(GPIO_PORTF_BASE, LED_RED|LED_GREEN|LED_BLUE, LED_GREEN|LED_RED|LED_BLUE);
 		ROM_SysCtlDelay(SysCtlClockGet() / (1000 * 3));
 		ROM_GPIOPinWrite(GPIO_PORTF_BASE, LED_RED|LED_GREEN|LED_BLUE, 0);
 	}
+
+	if(recChar == '1'){
+		ROM_GPIOPinWrite(GPIO_PORTF_BASE, LED_RED|LED_GREEN|LED_BLUE, LED_GREEN);
+	}
+
 }
 
 void UARTSend(const uint8_t *pui8Buffer, uint32_t ui32Count){
@@ -84,7 +95,12 @@ void ConfigureUART(void){
 	ROM_GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_0 | GPIO_PIN_1);
 
 	// Configure the UART for 115,200, 8-N-1 operation.
-	ROM_UARTConfigSetExpClk(UART0_BASE, ROM_SysCtlClockGet(), 115200, (UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE | UART_CONFIG_PAR_NONE));
+	//ROM_UARTConfigSetExpClk(UART0_BASE, ROM_SysCtlClockGet(), 115200, (UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE | UART_CONFIG_PAR_NONE));
+
+        // Configure UART clock using UART utils. The above line does not work by itself to enable the UART. The following two
+	// lines must be present. Why?
+        UARTClockSourceSet(UART0_BASE, UART_CLOCK_PIOSC);
+        UARTStdioConfig(0, 115200, 16000000);
 }
 
 
@@ -114,7 +130,8 @@ int main(void){
 	ROM_UARTIntEnable(UART0_BASE, UART_INT_RX | UART_INT_RT);
 
 	// Prompt for text to be entered.
-	UARTSend((uint8_t *)"Enter text: ", 12);
+	UARTprintf("Hello, world!\n");
+	UARTprintf("Enter Text: \n");
 
 	// Loop forever echoing data through the UART.
 	while(1){}
