@@ -1,7 +1,7 @@
 # Tiva Test #
 ---
 ## Introduction ##
-This repository is a testbed for code that is to be used with Texas Instruments' [Tiva Launchpad](http://www.ti.com/tool/ek-tm4c123gxl). In this README, I try to use the Blink project as the example for most of the instructions. This project is a work in progress...
+This repository is a testbed for code that is to be used with Texas Instruments' [Tiva Launchpad](http://www.ti.com/tool/ek-tm4c123gxl). In this README, I try to use the Blink project as the example for most of the instructions. Many of the programs will have minor functionality changes with commits, so go through the file history to see different things being done. This project is a work in progress...
 
 ## Installation and Setup##
 Since I develop on a Mac, here's what I did to get everything working properly:
@@ -28,3 +28,5 @@ Due to my inability to write proper makefiles, for any `driverlib` files that ar
 ## Project Descriptions ##
 *	**Blink** - Blinks an LED on and off
 *	**Print** - Prints to COM port and notifies user of LED status changes
+*	**Echo** - Repeats user-entered serial input back to user
+*	**Timers** - Blinks LEDs based on timer interrupts
