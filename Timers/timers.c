@@ -57,12 +57,13 @@ uint32_t g_ui32Flags;		// Current interrupt indicators
 // Functions -----------------------------------------------------------------------------------------
 
 void Timer0IntHandler(void){
-	char cOne, cTwo;
+	//char cOne, cTwo;
 
 	// Clear the timer interrupt.
 	ROM_TimerIntClear(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
 
 	// Toggle the flag for the first timer.
+	// From current understanding, XOR on the zeroth bit of &g_ui32Flags
 	HWREGBITW(&g_ui32Flags, 0) ^= 1;
 
 	// Use the flags to Toggle the LED for this timer
@@ -70,19 +71,25 @@ void Timer0IntHandler(void){
 
 	// Update the interrupt status on the display.
 	ROM_IntMasterDisable();
-	cOne = HWREGBITW(&g_ui32Flags, 0) ? '1' : '0';
-	cTwo = HWREGBITW(&g_ui32Flags, 1) ? '1' : '0';
-	UARTprintf("\rT1: %c  T2: %c", cOne, cTwo);
+	if (HWREGBITW(&g_ui32Flags, 0)){
+		UARTprintf("RED LED ON\n");
+	} else{
+		UARTprintf("RED LED OFF\n");
+	}
+	//cOne = HWREGBITW(&g_ui32Flags, 0) ? '1' : '0';
+	//cTwo = HWREGBITW(&g_ui32Flags, 1) ? '1' : '0';
+	//UARTprintf("\rT1: %c  T2: %c", cOne, cTwo);
 	ROM_IntMasterEnable();
 }
 
 void Timer1IntHandler(void){
-	char cOne, cTwo;
+	//char cOne, cTwo;
 
 	// Clear the timer interrupt.
 	ROM_TimerIntClear(TIMER1_BASE, TIMER_TIMA_TIMEOUT);
 
 	// Toggle the flag for the second timer.
+	// From current understanding, XOR on the first bit of &g_ui32Flags
 	HWREGBITW(&g_ui32Flags, 1) ^= 1;
 
 	// Use the flags to Toggle the LED for this timer
@@ -90,9 +97,40 @@ void Timer1IntHandler(void){
 
 	// Update the interrupt status on the display.
 	ROM_IntMasterDisable();
-	cOne = HWREGBITW(&g_ui32Flags, 0) ? '1' : '0';
-	cTwo = HWREGBITW(&g_ui32Flags, 1) ? '1' : '0';
-	UARTprintf("\rT1: %c  T2: %c", cOne, cTwo);
+	if (HWREGBITW(&g_ui32Flags, 1)){
+		UARTprintf("BLUE LED ON\n");
+	} else{
+		UARTprintf("BLUE LED OFF\n");
+	}
+	//cOne = HWREGBITW(&g_ui32Flags, 0) ? '1' : '0';
+	//cTwo = HWREGBITW(&g_ui32Flags, 1) ? '1' : '0';
+	//UARTprintf("\rT1: %c  T2: %c", cOne, cTwo);
+	ROM_IntMasterEnable();
+}
+
+void Timer2IntHandler(void){
+	//char cOne, cTwo;
+
+	// Clear the timer interrupt.
+	ROM_TimerIntClear(TIMER2_BASE, TIMER_TIMA_TIMEOUT);
+
+	// Toggle the flag for the second timer.
+	// From current understanding, XOR on the second bit of &g_ui32Flags
+	HWREGBITW(&g_ui32Flags, 2) ^= 1;
+
+	// Use the flags to Toggle the LED for this timer
+	ROM_GPIOPinWrite(GPIO_PORTF_BASE, LED_GREEN, g_ui32Flags << 1);
+
+	// Update the interrupt status on the display.
+	ROM_IntMasterDisable();
+	if (HWREGBITW(&g_ui32Flags, 1)){
+		UARTprintf("GREEN LED ON\n");
+	} else{
+		UARTprintf("GREEN LED OFF\n");
+	}
+	//cOne = HWREGBITW(&g_ui32Flags, 0) ? '1' : '0';
+	//cTwo = HWREGBITW(&g_ui32Flags, 1) ? '1' : '0';
+	//UARTprintf("\rT1: %c  T2: %c", cOne, cTwo);
 	ROM_IntMasterEnable();
 }
 
@@ -128,7 +166,6 @@ int main(void){
 	ConfigureUART();
 
 	UARTprintf("Timers example\n");
-	UARTprintf("T1: 0  T2: 0");
 
 	// Enable LEDs
 	ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
@@ -138,6 +175,7 @@ int main(void){
 	// Enable the peripherals used by this example.
 	ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
 	ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1);
+	ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER2);
 
 	// Enable processor interrupts.
 	ROM_IntMasterEnable();
@@ -145,18 +183,23 @@ int main(void){
 	// Configure the two 32-bit periodic timers.
 	ROM_TimerConfigure(TIMER0_BASE, TIMER_CFG_PERIODIC);
 	ROM_TimerConfigure(TIMER1_BASE, TIMER_CFG_PERIODIC);
+	ROM_TimerConfigure(TIMER2_BASE, TIMER_CFG_PERIODIC);
 	ROM_TimerLoadSet(TIMER0_BASE, TIMER_A, ROM_SysCtlClockGet());
-	ROM_TimerLoadSet(TIMER1_BASE, TIMER_A, ROM_SysCtlClockGet()/10);	// Blue should blink 10 times as much as red
+	ROM_TimerLoadSet(TIMER1_BASE, TIMER_A, ROM_SysCtlClockGet()*2);	// Blue should blink 2 times as much as red
+	ROM_TimerLoadSet(TIMER2_BASE, TIMER_A, ROM_SysCtlClockGet()*3);	// Green should blink 3 times as much as red
 
 	// Setup the interrupts for the timer timeouts.
 	ROM_IntEnable(INT_TIMER0A);
 	ROM_IntEnable(INT_TIMER1A);
+	ROM_IntEnable(INT_TIMER2A);
 	ROM_TimerIntEnable(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
 	ROM_TimerIntEnable(TIMER1_BASE, TIMER_TIMA_TIMEOUT);
+	ROM_TimerIntEnable(TIMER2_BASE, TIMER_TIMA_TIMEOUT);
 
 	// Enable the timers.
 	ROM_TimerEnable(TIMER0_BASE, TIMER_A);
 	ROM_TimerEnable(TIMER1_BASE, TIMER_A);
+	ROM_TimerEnable(TIMER2_BASE, TIMER_A);
 
 	// Loop forever while the timers run.
 	while(1){}
