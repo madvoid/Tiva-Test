@@ -49,7 +49,12 @@
 
 
 // Variables -----------------------------------------------------------------------------------------
-uint32_t g_ui32Flags;		// Current interrupt indicators
+
+// Current interrupt indicators - Bits 1-3 indicate status of LED/Timer. Original TivaWare examples have
+// bits 0-2 as indicators. Therefore, to turn an LED on, g_ui32Flags would need to be bitshifted right by 1.
+// In this code, bit 1 is for Timer 0 or Red LED, bit 2 is for Timer 1 or Blue LED, bit 3 is for Timer 2 or
+// green LED
+uint32_t g_ui32Flags;		
 
 
 
@@ -57,80 +62,68 @@ uint32_t g_ui32Flags;		// Current interrupt indicators
 // Functions -----------------------------------------------------------------------------------------
 
 void Timer0IntHandler(void){
-	//char cOne, cTwo;
 
 	// Clear the timer interrupt.
 	ROM_TimerIntClear(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
 
 	// Toggle the flag for the first timer.
 	// From current understanding, XOR on the zeroth bit of &g_ui32Flags
-	HWREGBITW(&g_ui32Flags, 0) ^= 1;
+	HWREGBITW(&g_ui32Flags, 1) ^= 1;
 
 	// Use the flags to Toggle the LED for this timer
-	ROM_GPIOPinWrite(GPIO_PORTF_BASE, LED_RED, g_ui32Flags << 1);
+	ROM_GPIOPinWrite(GPIO_PORTF_BASE, LED_RED, g_ui32Flags);
 
 	// Update the interrupt status on the display.
 	ROM_IntMasterDisable();
-	if (HWREGBITW(&g_ui32Flags, 0)){
+	if (HWREGBITW(&g_ui32Flags, 1)){
 		UARTprintf("RED LED ON\n");
 	} else{
 		UARTprintf("RED LED OFF\n");
 	}
-	//cOne = HWREGBITW(&g_ui32Flags, 0) ? '1' : '0';
-	//cTwo = HWREGBITW(&g_ui32Flags, 1) ? '1' : '0';
-	//UARTprintf("\rT1: %c  T2: %c", cOne, cTwo);
 	ROM_IntMasterEnable();
 }
 
 void Timer1IntHandler(void){
-	//char cOne, cTwo;
 
 	// Clear the timer interrupt.
 	ROM_TimerIntClear(TIMER1_BASE, TIMER_TIMA_TIMEOUT);
 
 	// Toggle the flag for the second timer.
 	// From current understanding, XOR on the first bit of &g_ui32Flags
-	HWREGBITW(&g_ui32Flags, 1) ^= 1;
+	HWREGBITW(&g_ui32Flags, 2) ^= 1;
 
 	// Use the flags to Toggle the LED for this timer
-	ROM_GPIOPinWrite(GPIO_PORTF_BASE, LED_BLUE, g_ui32Flags << 1);
+	ROM_GPIOPinWrite(GPIO_PORTF_BASE, LED_BLUE, g_ui32Flags);
 
 	// Update the interrupt status on the display.
 	ROM_IntMasterDisable();
-	if (HWREGBITW(&g_ui32Flags, 1)){
+	if (HWREGBITW(&g_ui32Flags, 2)){
 		UARTprintf("BLUE LED ON\n");
 	} else{
 		UARTprintf("BLUE LED OFF\n");
 	}
-	//cOne = HWREGBITW(&g_ui32Flags, 0) ? '1' : '0';
-	//cTwo = HWREGBITW(&g_ui32Flags, 1) ? '1' : '0';
-	//UARTprintf("\rT1: %c  T2: %c", cOne, cTwo);
 	ROM_IntMasterEnable();
 }
 
 void Timer2IntHandler(void){
-	//char cOne, cTwo;
 
 	// Clear the timer interrupt.
 	ROM_TimerIntClear(TIMER2_BASE, TIMER_TIMA_TIMEOUT);
 
 	// Toggle the flag for the second timer.
 	// From current understanding, XOR on the second bit of &g_ui32Flags
-	HWREGBITW(&g_ui32Flags, 2) ^= 1;
+	HWREGBITW(&g_ui32Flags, 3) ^= 1;
 
 	// Use the flags to Toggle the LED for this timer
-	ROM_GPIOPinWrite(GPIO_PORTF_BASE, LED_GREEN, g_ui32Flags << 1);
+	ROM_GPIOPinWrite(GPIO_PORTF_BASE, LED_GREEN, g_ui32Flags);
 
 	// Update the interrupt status on the display.
 	ROM_IntMasterDisable();
-	if (HWREGBITW(&g_ui32Flags, 1)){
+	if (HWREGBITW(&g_ui32Flags, 3)){
 		UARTprintf("GREEN LED ON\n");
 	} else{
 		UARTprintf("GREEN LED OFF\n");
 	}
-	//cOne = HWREGBITW(&g_ui32Flags, 0) ? '1' : '0';
-	//cTwo = HWREGBITW(&g_ui32Flags, 1) ? '1' : '0';
-	//UARTprintf("\rT1: %c  T2: %c", cOne, cTwo);
 	ROM_IntMasterEnable();
 }
 
