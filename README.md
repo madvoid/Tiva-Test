@@ -30,3 +30,4 @@ Due to my inability to write proper makefiles, for any `driverlib` files that ar
 *	**Print** - Prints to COM port and notifies user of LED status changes
 *	**Echo** - Repeats user-entered serial input back to user
 *	**Timers** - Blinks LEDs based on timer interrupts
+*	**Countdown** - Counts down from 10 on serial monitor/LEDs and signals end of time
