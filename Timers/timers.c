@@ -67,7 +67,7 @@ void Timer0IntHandler(void){
 	ROM_TimerIntClear(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
 
 	// Toggle the flag for the first timer.
-	// From current understanding, XOR on the zeroth bit of &g_ui32Flags
+	// From current understanding, XOR on the first bit of &g_ui32Flags
 	HWREGBITW(&g_ui32Flags, 1) ^= 1;
 
 	// Use the flags to Toggle the LED for this timer
@@ -89,7 +89,7 @@ void Timer1IntHandler(void){
 	ROM_TimerIntClear(TIMER1_BASE, TIMER_TIMA_TIMEOUT);
 
 	// Toggle the flag for the second timer.
-	// From current understanding, XOR on the first bit of &g_ui32Flags
+	// From current understanding, XOR on the second bit of &g_ui32Flags
 	HWREGBITW(&g_ui32Flags, 2) ^= 1;
 
 	// Use the flags to Toggle the LED for this timer
@@ -111,7 +111,7 @@ void Timer2IntHandler(void){
 	ROM_TimerIntClear(TIMER2_BASE, TIMER_TIMA_TIMEOUT);
 
 	// Toggle the flag for the second timer.
-	// From current understanding, XOR on the second bit of &g_ui32Flags
+	// From current understanding, XOR on the third bit of &g_ui32Flags
 	HWREGBITW(&g_ui32Flags, 3) ^= 1;
 
 	// Use the flags to Toggle the LED for this timer
