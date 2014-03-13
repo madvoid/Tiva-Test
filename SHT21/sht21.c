@@ -46,6 +46,7 @@
 
 #define SHT21_I2C_ADDRESS  0x40
 #define SHT21_TEMP_NOBLOCK 0xF3
+#define SHT21_HUM_NOBLOCK  0xF5
 
 
 // Variables -----------------------------------------------------------------------------------------
@@ -131,7 +132,8 @@ int main(void){
 	while(1){
 		// Set address, put data in buffer, and send
 		ROM_I2CMasterSlaveAddrSet(I2C3_BASE, SHT21_I2C_ADDRESS, false);
-		ROM_I2CMasterDataPut(I2C3_BASE, SHT21_TEMP_NOBLOCK);
+		//ROM_I2CMasterDataPut(I2C3_BASE, SHT21_TEMP_NOBLOCK);
+		ROM_I2CMasterDataPut(I2C3_BASE, SHT21_HUM_NOBLOCK);
 		ROM_I2CMasterControl(I2C3_BASE, I2C_MASTER_CMD_SINGLE_SEND);
 		UARTprintf("Data Sent\n");
 		
@@ -139,7 +141,8 @@ int main(void){
 		while(ROM_I2CMasterBusy(I2C3_BASE)){}
 
 		// Delay - Wait for measurement to complete
-		ROM_SysCtlDelay(ROM_SysCtlClockGet()/3/12);
+		//ROM_SysCtlDelay(ROM_SysCtlClockGet()/3/11);	// Temp maximum gather time
+		ROM_SysCtlDelay(ROM_SysCtlClockGet()/3/34);	// Hum maximum gather time
 
 		// Set address to read
 		ROM_I2CMasterSlaveAddrSet(I2C3_BASE, SHT21_I2C_ADDRESS, true);
@@ -165,15 +168,26 @@ int main(void){
 		UARTprintf("Data Byte 3: %x\n",g_I2C3Data[2]);
 
 		// Convert to temperature
-		uint32_t printTemp[2];
-		uint16_t tempConvert = ((uint16_t)g_I2C3Data[0] << 8) | (uint16_t)(g_I2C3Data[1]);
-		UARTprintf("TempConvert: %x\n",tempConvert);
-		float temp = (float)(tempConvert & 0xFFFC);
-		temp = -46.85f + 175.72f * (temp/65536.0f);
-		FloatToPrint(temp,printTemp);
+		//uint32_t printTemp[2];
+		//uint16_t tempConvert = ((uint16_t)g_I2C3Data[0] << 8) | (uint16_t)(g_I2C3Data[1]);
+		//UARTprintf("TempConvert: %x\n",tempConvert);
+		//float temp = (float)(tempConvert & 0xFFFC);
+		//temp = -46.85f + 175.72f * (temp/65536.0f);
+		//FloatToPrint(temp,printTemp);
 
 		// Print temperature
-		UARTprintf("Temperature: %d.%03d\n",printTemp[0],printTemp[1]);
+		//UARTprintf("Temperature: %d.%03d\n",printTemp[0],printTemp[1]);
+
+		// Convert to Humidity
+		uint32_t printHum[2];
+		uint16_t humConvert = ((uint16_t)g_I2C3Data[0] << 8) | (uint16_t)(g_I2C3Data[1]);
+		UARTprintf("HumConvert: %x\n",humConvert);
+		float hum = (float)(humConvert & 0xFFFC);
+		hum = -6.0f + 125.0f * (hum/65536.0f);
+		FloatToPrint(hum,printHum);
+
+		// Print humidity
+		UARTprintf("Humidity: %d.%03d\n",printHum[0],printHum[1]);
 		
 		// Blink LED
 		ROM_GPIOPinWrite(GPIO_PORTF_BASE, LED_RED|LED_GREEN|LED_BLUE, LED_GREEN);
