@@ -25,9 +25,11 @@ Alternatively, you could just run the makefile to compile the code. As an altern
 
 Due to my inability to write proper makefiles, for any `driverlib` files that are used in the code, the corresponding `.o` file must be manually added to the Makefile's linker flags. In addition, any `.c` files used from the TivaWare `utils` folder must be added manually. See the makefiles for examples.
 
-## Project Descriptions ##
+
+# Project Descriptions ##
 *	**Blink** - Blinks an LED on and off
 *	**Print** - Prints to COM port and notifies user of LED status changes
 *	**Echo** - Repeats user-entered serial input back to user
 *	**Timers** - Blinks LEDs based on timer interrupts
 *	**Countdown** - Counts down from 10 on serial monitor/LEDs and signals end of time
+*	**SHT21** - Interfaces with Sensirion SHT21 sensor on SensorHub Boosterpack
