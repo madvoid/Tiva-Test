@@ -41,6 +41,7 @@ DRIVOBJROOT=${ROOT}/driverlib/gcc
 CFLAGS=${FILENAME}.c       \
        startup_gcc.c       \
        ${ROOT}/utils/uartstdio.c \
+       shtLib.c            \
        -g                  \
        -mthumb             \
        ${CPU}              \
@@ -72,6 +73,7 @@ LDFLAGS=-T                 \
 	${DRIVOBJROOT}/sysctl.o \
         ${DRIVOBJROOT}/uart.o   \
         uartstdio.o \
+	shtLib.o \
 
 
 
@@ -79,9 +81,9 @@ LDFLAGS=-T                 \
 # Rules
 # ----------------------------------------------------------------------------------------------------
 all:
-	${CC} ${CFLAGS}
-	${LD} ${LDFLAGS} 
-	${OBJCOPY} -O binary a.out ${FILENAME}.bin
+	@${CC} ${CFLAGS}
+	@${LD} ${LDFLAGS} 
+	@${OBJCOPY} -O binary a.out ${FILENAME}.bin
 
 upload:
 	lm4flash ${FILENAME}.bin

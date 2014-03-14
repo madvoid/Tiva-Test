@@ -38,6 +38,8 @@
 
 #include "utils/uartstdio.h"
 
+#include "shtLib.h"
+
 
 // Defines -------------------------------------------------------------------------------------------
 #define LED_RED GPIO_PIN_1
@@ -50,7 +52,6 @@
 
 
 // Variables -----------------------------------------------------------------------------------------
-static uint32_t g_I2C3Data[3];			// Data byte gathered from I2C3 master
 
 
 // Functions -----------------------------------------------------------------------------------------
@@ -87,8 +88,6 @@ void ConfigureI2C3(void){
 	// Initialize as master - Change 'false' to 'true' if fast mode is desired
 	ROM_I2CMasterInitExpClk(I2C3_BASE, ROM_SysCtlClockGet(), false);
 
-	// Debug
-	//UARTprintf("I2C3 Setup\n");
 }
 
 void FloatToPrint(float floatValue, uint32_t splitValue[2]){
@@ -129,71 +128,32 @@ int main(void){
 	// Enable I2C3
 	ConfigureI2C3();
 
+	// Create SHT instance
+	tSHT2x ShtSensHub;
+
+	// Create print variables
+	uint32_t printValue[2];
+
 	while(1){
-		// Set address, put data in buffer, and send
-		ROM_I2CMasterSlaveAddrSet(I2C3_BASE, SHT21_I2C_ADDRESS, false);
-		//ROM_I2CMasterDataPut(I2C3_BASE, SHT21_TEMP_NOBLOCK);
-		ROM_I2CMasterDataPut(I2C3_BASE, SHT21_HUM_NOBLOCK);
-		ROM_I2CMasterControl(I2C3_BASE, I2C_MASTER_CMD_SINGLE_SEND);
-		UARTprintf("Data Sent\n");
-		
-		// Wait for transfer finish
-		while(ROM_I2CMasterBusy(I2C3_BASE)){}
+		// Read temperature and Humidity
+		SHT21ReadTemperature(&ShtSensHub);
+		SHT21ReadHumidity(&ShtSensHub);
 
-		// Delay - Wait for measurement to complete
-		//ROM_SysCtlDelay(ROM_SysCtlClockGet()/3/11);	// Temp maximum gather time
-		ROM_SysCtlDelay(ROM_SysCtlClockGet()/3/34);	// Hum maximum gather time
+		// Print
+		//UARTprintf("Hum Raw: %x  ||  ", ShtSensHub.humRaw);
+		//UARTprintf("Temp Raw: %x\n", ShtSensHub.tempRaw);
+		FloatToPrint(ShtSensHub.hum, printValue);
+		UARTprintf("Humidity: %d.%03d  ||  ",printValue[0],printValue[1]);
+		FloatToPrint(ShtSensHub.temp, printValue);
+		UARTprintf("Temperature: %d.%03d\n",printValue[0],printValue[1]);
 
-		// Set address to read
-		ROM_I2CMasterSlaveAddrSet(I2C3_BASE, SHT21_I2C_ADDRESS, true);
-		
-		// Master read burst byte 1
-		ROM_I2CMasterControl(I2C3_BASE, I2C_MASTER_CMD_BURST_RECEIVE_START);
-		while(ROM_I2CMasterBusy(I2C3_BASE)){}
-		g_I2C3Data[0] = ROM_I2CMasterDataGet(I2C3_BASE);
-
-		// Master read burst byte 2
-		ROM_I2CMasterControl(I2C3_BASE, I2C_MASTER_CMD_BURST_RECEIVE_CONT);
-		while(ROM_I2CMasterBusy(I2C3_BASE)){}
-		g_I2C3Data[1] = ROM_I2CMasterDataGet(I2C3_BASE);
-
-		// Master read burst byte 3
-		ROM_I2CMasterControl(I2C3_BASE, I2C_MASTER_CMD_BURST_RECEIVE_FINISH);
-		while(ROM_I2CMasterBusy(I2C3_BASE)){}
-		g_I2C3Data[2] = ROM_I2CMasterDataGet(I2C3_BASE);
-
-		// Print results
-		UARTprintf("Data Byte 1: %x\n",g_I2C3Data[0]);
-		UARTprintf("Data Byte 2: %x\n",g_I2C3Data[1]);
-		UARTprintf("Data Byte 3: %x\n",g_I2C3Data[2]);
-
-		// Convert to temperature
-		//uint32_t printTemp[2];
-		//uint16_t tempConvert = ((uint16_t)g_I2C3Data[0] << 8) | (uint16_t)(g_I2C3Data[1]);
-		//UARTprintf("TempConvert: %x\n",tempConvert);
-		//float temp = (float)(tempConvert & 0xFFFC);
-		//temp = -46.85f + 175.72f * (temp/65536.0f);
-		//FloatToPrint(temp,printTemp);
-
-		// Print temperature
-		//UARTprintf("Temperature: %d.%03d\n",printTemp[0],printTemp[1]);
-
-		// Convert to Humidity
-		uint32_t printHum[2];
-		uint16_t humConvert = ((uint16_t)g_I2C3Data[0] << 8) | (uint16_t)(g_I2C3Data[1]);
-		UARTprintf("HumConvert: %x\n",humConvert);
-		float hum = (float)(humConvert & 0xFFFC);
-		hum = -6.0f + 125.0f * (hum/65536.0f);
-		FloatToPrint(hum,printHum);
-
-		// Print humidity
-		UARTprintf("Humidity: %d.%03d\n",printHum[0],printHum[1]);
-		
 		// Blink LED
 		ROM_GPIOPinWrite(GPIO_PORTF_BASE, LED_RED|LED_GREEN|LED_BLUE, LED_GREEN);
 		ROM_SysCtlDelay(ROM_SysCtlClockGet()/3/10);	// Delay for 100ms (1/10s) :: ClockGet()/3 = 1second
 		ROM_GPIOPinWrite(GPIO_PORTF_BASE, LED_RED|LED_GREEN|LED_BLUE, 0);
 
+		// Delay for second
+		// Don't want to go much faster than this to reduce self heating
 		ROM_SysCtlDelay(ROM_SysCtlClockGet()/3);
 	}
 
