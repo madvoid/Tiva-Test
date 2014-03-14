@@ -46,10 +46,6 @@
 #define LED_BLUE GPIO_PIN_2
 #define LED_GREEN GPIO_PIN_3
 
-#define SHT21_I2C_ADDRESS  0x40
-#define SHT21_TEMP_NOBLOCK 0xF3
-#define SHT21_HUM_NOBLOCK  0xF5
-
 
 // Variables -----------------------------------------------------------------------------------------
 
@@ -85,8 +81,8 @@ void ConfigureI2C3(void){
 	ROM_GPIOPinConfigure(GPIO_PD0_I2C3SCL);
 	ROM_GPIOPinConfigure(GPIO_PD1_I2C3SDA);
 
-	// Initialize as master - Change 'false' to 'true' if fast mode is desired
-	ROM_I2CMasterInitExpClk(I2C3_BASE, ROM_SysCtlClockGet(), false);
+	// Initialize as master - 'true' for fastmode, 'false' for regular
+	ROM_I2CMasterInitExpClk(I2C3_BASE, ROM_SysCtlClockGet(), true);
 
 }
 
