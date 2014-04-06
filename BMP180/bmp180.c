@@ -1,19 +1,21 @@
-// sht21.c
+// bmp180.c
 //
 //****************************************************************************************************
 // Author:
 // 	Nipun Gunawardena
 //
 // Credits:
-//	Modified from the TivaWare 'humidity_sht21.c' program
+//	Modified from the TivaWare 'bmp180.c' program. Thanks to adafruit for the coding sanity check
+//	See https://github.com/adafruit/Adafruit_BMP085_Unified
 //
 // Requirements:
 // 	Requires Texas Instruments' TivaWare.
 //
 // Description:
-// 	Interface with Sensirion SHT21 on Sensorhub Boosterpack
+// 	Interface with Bosch BMP180 on SensorHub boosterpack
 //
 // Notes:
+//	See datasheet for intermediate value naming conventions
 //	
 //
 //****************************************************************************************************
@@ -24,8 +26,8 @@
 #include <stdbool.h>
 
 #include "inc/hw_ints.h"
-#include "inc/hw_memmap.h"
 #include "inc/hw_i2c.h"
+#include "inc/hw_memmap.h"
 
 #include "driverlib/fpu.h"
 #include "driverlib/gpio.h"
@@ -73,6 +75,8 @@
 uint8_t g_oversamplingSetting = 3;
 uint8_t g_calRegs[] = {BMP180_REG_CAL_AC1, BMP180_REG_CAL_AC2, BMP180_REG_CAL_AC3, BMP180_REG_CAL_AC4, BMP180_REG_CAL_AC5,  BMP180_REG_CAL_AC6,  BMP180_REG_CAL_B1,  BMP180_REG_CAL_B2,  BMP180_REG_CAL_MB,  BMP180_REG_CAL_MC,  BMP180_REG_CAL_MD };
 uint32_t g_calRawVals[22];
+uint32_t g_tempRawVals[2];
+uint32_t g_presRawVals[2];
 
 struct {
       int16_t  ac1;
@@ -139,7 +143,7 @@ void BMP180GetRawTemp(){
 
 	// Send temperature command
 	ROM_I2CMasterDataPut(I2C3_BASE, BMP180_READ_TEMP);
-	ROM_I2CMasterControl(I2C3_BASE, I2C_MASTER_CMD_BURST_SEND_CONT);
+	ROM_I2CMasterControl(I2C3_BASE, I2C_MASTER_CMD_BURST_SEND_FINISH);
 
 	// Wait for bus to free
 	while(ROM_I2CMasterBusy(I2C3_BASE)){}
@@ -147,12 +151,48 @@ void BMP180GetRawTemp(){
 	// Delay for 4.5 ms
 	ROM_SysCtlDelay(ROM_SysCtlClockGet()/3/222);
 
+	// Configure to write, send tempdata register
+	ROM_I2CMasterSlaveAddrSet(I2C3_BASE, BMP180_I2C_ADDRESS, false);
+	ROM_I2CMasterDataPut(I2C3_BASE, BMP180_REG_TEMPDATA);
+	ROM_I2CMasterControl(I2C3_BASE, I2C_MASTER_CMD_BURST_SEND_START);
+
+	// Wait for bus to free
+	while(ROM_I2CMasterBusy(I2C3_BASE)){}
+
 	// Send restart
 	ROM_I2CMasterSlaveAddrSet(I2C3_BASE, BMP180_I2C_ADDRESS, true);
+
+	// Read MSB
+	ROM_I2CMasterControl(I2C3_BASE, I2C_MASTER_CMD_BURST_RECEIVE_START);
+	while(ROM_I2CMasterBusy(I2C3_BASE)){}
+	g_tempRawVals[0] = ROM_I2CMasterDataGet(I2C3_BASE);
+
+	// Read LSB
+	ROM_I2CMasterControl(I2C3_BASE, I2C_MASTER_CMD_BURST_RECEIVE_FINISH);
+	while(ROM_I2CMasterBusy(I2C3_BASE)){}
+	g_tempRawVals[1] = ROM_I2CMasterDataGet(I2C3_BASE);
+	
 }
 
-void BMP180GetRawPressure(){
+float BMP180GetTemp(){
+	// Get raw temperature
+	BMP180GetRawTemp();
 
+	// Calculate UT
+	int32_t UT = (int32_t)((g_tempRawVals[0]<<8) + g_tempRawVals[1]);
+
+	// Calculate X1
+	int32_t X1 = (UT - (int32_t)g_Bmp180CalibData.ac6) * ((int32_t)g_Bmp180CalibData.ac5) / 32768;
+
+	// Calculate X2
+	int32_t X2 = ((int32_t)g_Bmp180CalibData.mc * 2048) / (X1 + (int32_t)g_Bmp180CalibData.md);
+
+	// Calculate B5
+	int32_t B5 = X1 + X2;
+
+	float temp = ((float)B5 + 8.0f)/16.0f;
+
+	return temp/10.0f;	// Why do we divide by 10? Not in datasheet but necessary...
 }
 
 void ConfigureUART(void){
@@ -218,6 +258,7 @@ void FloatToPrint(float floatValue, uint32_t splitValue[2]){
 int main(void){
 
 	// Enable lazy stacking
+	ROM_FPUEnable();
 	ROM_FPULazyStackingEnable();
 
 	// Set the system clock to run at 40Mhz off PLL with external crystal as reference.
@@ -237,20 +278,35 @@ int main(void){
 	// Check oversampling
 	if(g_oversamplingSetting > 3) g_oversamplingSetting = 3;
 
+	// Create printing variable
+	uint32_t printValue[2];
+
+	// Get & print calibration values
 	BMP180GetCalVals();
-	UARTprintf("AC1: %i\n", g_Bmp180CalibData.ac1);
-	UARTprintf("AC2: %i\n", g_Bmp180CalibData.ac2);
-	UARTprintf("AC3: %i\n", g_Bmp180CalibData.ac3);
-	UARTprintf("AC4: %i\n", g_Bmp180CalibData.ac4);
-	UARTprintf("AC5: %i\n", g_Bmp180CalibData.ac5);
-	UARTprintf("AC6: %i\n", g_Bmp180CalibData.ac6);
-	UARTprintf("B1: %i\n", g_Bmp180CalibData.b1);
-	UARTprintf("B2: %i\n", g_Bmp180CalibData.b2);
-	UARTprintf("MB: %i\n", g_Bmp180CalibData.mb);
-	UARTprintf("MC: %i\n", g_Bmp180CalibData.mc);
-	UARTprintf("MD: %i\n", g_Bmp180CalibData.md);
+	//UARTprintf("AC1: %i\n", g_Bmp180CalibData.ac1);
+	//UARTprintf("AC2: %i\n", g_Bmp180CalibData.ac2);
+	//UARTprintf("AC3: %i\n", g_Bmp180CalibData.ac3);
+	//UARTprintf("AC4: %i\n", g_Bmp180CalibData.ac4);
+	//UARTprintf("AC5: %i\n", g_Bmp180CalibData.ac5);
+	//UARTprintf("AC6: %i\n", g_Bmp180CalibData.ac6);
+	//UARTprintf("B1: %i\n", g_Bmp180CalibData.b1);
+	//UARTprintf("B2: %i\n", g_Bmp180CalibData.b2);
+	//UARTprintf("MB: %i\n", g_Bmp180CalibData.mb);
+	//UARTprintf("MC: %i\n", g_Bmp180CalibData.mc);
+	//UARTprintf("MD: %i\n", g_Bmp180CalibData.md);
+
+	// Get & print temperature
+	float temp = BMP180GetTemp();
+	FloatToPrint(temp, printValue);
+	UARTprintf("Temperature: %d.%03d \n",printValue[0], printValue[1]);
 
 	while(1){
+		
+		// Get & print temperature
+		temp = BMP180GetTemp();
+		FloatToPrint(temp, printValue);
+		UARTprintf("Temperature: %d.%03d \n",printValue[0], printValue[1]);
+
 		// Blink LED
 		ROM_GPIOPinWrite(GPIO_PORTF_BASE, LED_RED|LED_GREEN|LED_BLUE, LED_GREEN);
 		ROM_SysCtlDelay(ROM_SysCtlClockGet()/3/10);	// Delay for 100ms (1/10s) :: ClockGet()/3 = 1second
