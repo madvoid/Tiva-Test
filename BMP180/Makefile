@@ -11,7 +11,7 @@
 #	None
 #
 # Description:
-#	Simple makefile for use with arm-non-eabi-gcc and Tiva Launchpad. Upload code to Launchpad with 
+#	Simple makefile for use with arm-non-eabi-gcc and Tiva Launchpad. Upload code to Launchpad with
 #	'lm4flash timers.bin'
 # ****************************************************************************************************
 
@@ -41,6 +41,7 @@ DRIVOBJROOT=${ROOT}/driverlib/gcc
 CFLAGS=${FILENAME}.c       \
        startup_gcc.c       \
        ${ROOT}/utils/uartstdio.c \
+       bmpLib.c            \
        -g                  \
        -mthumb             \
        ${CPU}              \
@@ -58,7 +59,7 @@ CFLAGS=${FILENAME}.c       \
        -DTARGET_IS_BLIZZARD_RB1 \
 
 # Linker flags
-# Note: Any object files from any driverlib files needs to be appended to the LDFLAGS below in the 
+# Note: Any object files from any driverlib files needs to be appended to the LDFLAGS below in the
 #	format of ${DRIVEOBJROOT}/driverlibfile.o
 LDFLAGS=-T                 \
         ${FILENAME}.ld     \
@@ -72,6 +73,7 @@ LDFLAGS=-T                 \
 	${DRIVOBJROOT}/sysctl.o \
         ${DRIVOBJROOT}/uart.o   \
         uartstdio.o \
+        bmpLib.o    \
 
 
 
@@ -80,7 +82,7 @@ LDFLAGS=-T                 \
 # ----------------------------------------------------------------------------------------------------
 all:
 	@${CC} ${CFLAGS}
-	@${LD} ${LDFLAGS} 
+	@${LD} ${LDFLAGS}
 	@${OBJCOPY} -O binary a.out ${FILENAME}.bin
 
 upload:
