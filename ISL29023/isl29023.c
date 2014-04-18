@@ -82,6 +82,7 @@ uint32_t g_resSetting;
 uint16_t g_rangeSetting;
 uint32_t g_rawVals[2];
 float g_alpha;
+float g_beta = 1.486;	// TI Code has following four possible values: 95.238, 23.810, 5.952, 1.486 - all based on range
 float g_alsVal;
 float g_irVal;
 
@@ -212,10 +213,65 @@ void ISL29023GetALS(){
 
 void ISL29023GetRawIR(){
 
+	// Configure to write, send control register
+	ROM_I2CMasterSlaveAddrSet(I2C3_BASE, ISL29023_I2C_ADDRESS, false);
+	ROM_I2CMasterDataPut(I2C3_BASE, ISL29023_REG_COMMANDI);
+	ROM_I2CMasterControl(I2C3_BASE, I2C_MASTER_CMD_BURST_SEND_START);
+
+	// Wait for bus to free
+	while(ROM_I2CMasterBusy(I2C3_BASE)){}
+
+	// Send data byte
+	ROM_I2CMasterDataPut(I2C3_BASE, ISL29023_COMMANDI_ONEIR | ISL29023_COMMANDI_PERSIST1);
+	ROM_I2CMasterControl(I2C3_BASE, I2C_MASTER_CMD_BURST_SEND_FINISH);
+
+	// Wait for bus to free
+	while(ROM_I2CMasterBusy(I2C3_BASE)){}
+
+	// Wait for measurement to complete
+	switch(g_resSetting){
+		case 65536:
+			ROM_SysCtlDelay(ROM_SysCtlClockGet()/3/11);
+			break;
+		case 4096:
+			ROM_SysCtlDelay(ROM_SysCtlClockGet()/3/166);
+			break;
+		case 256:
+			ROM_SysCtlDelay(ROM_SysCtlClockGet()/3/250);
+			break;
+		case 16:
+			ROM_SysCtlDelay(ROM_SysCtlClockGet()/3/250);
+			break;
+		default:
+			ROM_SysCtlDelay(ROM_SysCtlClockGet()/3/11);
+			break;
+	}
+
+	// Send start, configure to write, send LSB register
+	ROM_I2CMasterSlaveAddrSet(I2C3_BASE, ISL29023_I2C_ADDRESS, false);
+	ROM_I2CMasterDataPut(I2C3_BASE, ISL29023_REG_DATALSB);
+	ROM_I2CMasterControl(I2C3_BASE, I2C_MASTER_CMD_BURST_SEND_START);
+	
+	// Wait for bus to free
+	while(ROM_I2CMasterBusy(I2C3_BASE)){}
+
+	// Send restart, configure to read
+	ROM_I2CMasterSlaveAddrSet(I2C3_BASE, ISL29023_I2C_ADDRESS, true);
+
+	// Read LSB
+	ROM_I2CMasterControl(I2C3_BASE, I2C_MASTER_CMD_BURST_RECEIVE_START);
+	while(ROM_I2CMasterBusy(I2C3_BASE)){}
+	g_rawVals[1] = ROM_I2CMasterDataGet(I2C3_BASE);
+
+	// Read MSB
+	ROM_I2CMasterControl(I2C3_BASE, I2C_MASTER_CMD_BURST_RECEIVE_FINISH);
+	while(ROM_I2CMasterBusy(I2C3_BASE)){}
+	g_rawVals[0] = ROM_I2CMasterDataGet(I2C3_BASE);
 }
 
 void ISL29023GetIR(){
-
+	ISL29023GetRawIR();
+	g_irVal = ((float)((g_rawVals[0] << 8) | g_rawVals[1])) / g_beta;
 }
 
 void ConfigureUART(void){
@@ -294,13 +350,18 @@ int main(void){
 	// Create print variables
 	uint32_t printValue[2];
 
-	ISL29023ChangeSettings(ISL29023_COMMANDII_RANGE1k, ISL29023_COMMANDII_RES16);
+	ISL29023ChangeSettings(ISL29023_COMMANDII_RANGE64k, ISL29023_COMMANDII_RES16);
 
 	while(1){
+		// Get ALS
 		ISL29023GetALS();
 		FloatToPrint(g_alsVal, printValue);
-		//UARTprintf("MSB: %d || LSB: %d || ",g_rawVals[0],g_rawVals[1]);
-		UARTprintf("ALS: %d.%03d\n",printValue[0],printValue[1]);
+		UARTprintf("ALS: %d.%03d |.| ",printValue[0],printValue[1]);
+
+		// Get IR
+		ISL29023GetIR();
+		FloatToPrint(g_irVal, printValue);
+		UARTprintf("IR: %d.%03d\n",printValue[0],printValue[1]);
 
 		// Blink LED
 		ROM_GPIOPinWrite(GPIO_PORTF_BASE, LED_RED|LED_GREEN|LED_BLUE, LED_GREEN);

@@ -1,4 +1,4 @@
-// bmpLib.h
+// bmpLib.c
 //
 //****************************************************************************************************
 // Author:
@@ -34,7 +34,9 @@
 // Functions -----------------------------------------------------------------------------------------
 
 void BMP180Initialize(tBMP180 *psInst, uint8_t oss){
-	if(oss > 3) oss = 3;	
+	if(oss > 3){
+		oss = 3;	
+	}
 	psInst->oversamplingSetting = oss;
 
 	psInst->calRegs[0] = BMP180_REG_CAL_AC1;
@@ -48,10 +50,11 @@ void BMP180Initialize(tBMP180 *psInst, uint8_t oss){
 	psInst->calRegs[8] = BMP180_REG_CAL_MB;
 	psInst->calRegs[9] = BMP180_REG_CAL_MC;
 	psInst->calRegs[10] = BMP180_REG_CAL_MD;
+
 }
 
 
-void BMP180GetCalVals(tBMP180 *psInst){
+void BMP180GetCalVals(tBMP180 *psInst, tBMP180Cals *calInst){
 	for(int i = 0; i < 11; i++){
 		// Configure to write, set register to send, send
 		ROM_I2CMasterSlaveAddrSet(I2C3_BASE, BMP180_I2C_ADDRESS, false);
@@ -74,17 +77,17 @@ void BMP180GetCalVals(tBMP180 *psInst){
 		while(ROM_I2CMasterBusy(I2C3_BASE)){}
 		psInst->calRawVals[2*i+1] = ROM_I2CMasterDataGet(I2C3_BASE);
 	}
-	psInst->ac1 = (int16_t) ( (psInst->calRawVals[0] << 8) | psInst->calRawVals[1] );
-	psInst->ac2 = (int16_t) ( (psInst->calRawVals[2] << 8) | psInst->calRawVals[3] );
-	psInst->ac3 = (int16_t) ( (psInst->calRawVals[4] << 8) | psInst->calRawVals[5] );
-	psInst->ac4 = (uint16_t)( (psInst->calRawVals[6] << 8) | psInst->calRawVals[7] );
-	psInst->ac5 = (uint16_t)( (psInst->calRawVals[8] << 8) | psInst->calRawVals[9] );
-	psInst->ac6 = (uint16_t)( (psInst->calRawVals[10] << 8) | psInst->calRawVals[11] );
-	psInst->b1 =  (int16_t) ( (psInst->calRawVals[12] << 8) | psInst->calRawVals[13] );
-	psInst->b2 =  (int16_t) ( (psInst->calRawVals[14] << 8) | psInst->calRawVals[15] );
-	psInst->mb =  (int16_t) ( (psInst->calRawVals[16] << 8) | psInst->calRawVals[17] );
-	psInst->mc =  (int16_t) ( (psInst->calRawVals[18] << 8) | psInst->calRawVals[19] );
-	psInst->md =  (int16_t) ( (psInst->calRawVals[20] << 8) | psInst->calRawVals[21] );
+	calInst->ac1 = (int16_t) ( (psInst->calRawVals[0] << 8) | psInst->calRawVals[1] );
+	calInst->ac2 = (int16_t) ( (psInst->calRawVals[2] << 8) | psInst->calRawVals[3] );
+	calInst->ac3 = (int16_t) ( (psInst->calRawVals[4] << 8) | psInst->calRawVals[5] );
+	calInst->ac4 = (uint16_t)( (psInst->calRawVals[6] << 8) | psInst->calRawVals[7] );
+	calInst->ac5 = (uint16_t)( (psInst->calRawVals[8] << 8) | psInst->calRawVals[9] );
+	calInst->ac6 = (uint16_t)( (psInst->calRawVals[10] << 8) | psInst->calRawVals[11] );
+	calInst->b1 =  (int16_t) ( (psInst->calRawVals[12] << 8) | psInst->calRawVals[13] );
+	calInst->b2 =  (int16_t) ( (psInst->calRawVals[14] << 8) | psInst->calRawVals[15] );
+	calInst->mb =  (int16_t) ( (psInst->calRawVals[16] << 8) | psInst->calRawVals[17] );
+	calInst->mc =  (int16_t) ( (psInst->calRawVals[18] << 8) | psInst->calRawVals[19] );
+	calInst->md =  (int16_t) ( (psInst->calRawVals[20] << 8) | psInst->calRawVals[21] );
 	
 }
 
@@ -131,18 +134,18 @@ void BMP180GetRawTemp(tBMP180 *psInst){
 	
 }
 
-void BMP180GetTemp(tBMP180 *psInst){
+void BMP180GetTemp(tBMP180 *psInst, tBMP180Cals *calInst){
 	// Get raw temperature
-	BMP180GetRawTemp(&psInst);
+	BMP180GetRawTemp(psInst);
 
 	// Calculate UT
 	int32_t UT = (int32_t)((psInst->tempRawVals[0]<<8) + psInst->tempRawVals[1]);
 
 	// Calculate X1
-	int32_t X1 = (UT - (int32_t)psInst->ac6) * ((int32_t)psInst->ac5) / 32768;
+	int32_t X1 = (UT - (int32_t)calInst->ac6) * ((int32_t)calInst->ac5) / 32768;
 
 	// Calculate X2
-	int32_t X2 = ((int32_t)psInst->mc * 2048) / (X1 + (int32_t)psInst->md);
+	int32_t X2 = ((int32_t)calInst->mc * 2048) / (X1 + (int32_t)calInst->md);
 
 	// Calculate B5
 	int32_t B5 = X1 + X2;
@@ -218,10 +221,10 @@ void BMP180GetRawPressure(tBMP180 *psInst, int oss){
 }
 
 
-void BMP180GetPressure(tBMP180 *psInst){
+void BMP180GetPressure(tBMP180 *psInst, tBMP180Cals *calInst){
 	// Get raw temp, pressure
-	BMP180GetRawTemp(&psInst);
-	BMP180GetRawPressure(&psInst, psInst->oversamplingSetting);
+	BMP180GetRawTemp(psInst);
+	BMP180GetRawPressure(psInst, psInst->oversamplingSetting);
 	
 	// Calculate UT
 	int32_t UT = (int32_t)((psInst->tempRawVals[0]<<8) + psInst->tempRawVals[1]);
@@ -230,10 +233,10 @@ void BMP180GetPressure(tBMP180 *psInst){
 	int32_t UP = ( ((int32_t)psInst->presRawVals[0] << 16) + ((int32_t)psInst->presRawVals[1] << 8) + (int32_t)psInst->presRawVals[2]) >> (8 - psInst->oversamplingSetting);
 
 	// Calculate X1
-	int32_t X1 = (UT - (int32_t)psInst->ac6) * ((int32_t)psInst->ac5) / 32768;
+	int32_t X1 = (UT - (int32_t)calInst->ac6) * ((int32_t)calInst->ac5) / 32768;
 
 	// Calculate X2
-	int32_t X2 = ((int32_t)psInst->mc * 2048) / (X1 + (int32_t)psInst->md);
+	int32_t X2 = ((int32_t)calInst->mc * 2048) / (X1 + (int32_t)calInst->md);
 
 	// Calculate B5
 	int32_t B5 = X1 + X2;
@@ -242,28 +245,28 @@ void BMP180GetPressure(tBMP180 *psInst){
 	int32_t B6 = B5 - 4000;
 
 	// Recalculate X1
-	X1 = ((int32_t)psInst->b2 * ((B6 * B6) / 4096)) / 2048;
+	X1 = ((int32_t)calInst->b2 * ((B6 * B6) / 4096)) / 2048;
 
 	// Recalculate X2
-	X2 = (int32_t)psInst->ac2 * B6 / 2048;
+	X2 = (int32_t)calInst->ac2 * B6 / 2048;
 
 	// Calculate X3
 	int32_t X3 = X1 + X2;
 
 	// Calculate B3
-	int32_t B3 = ( ( ((int32_t)psInst->ac1*4 + X3) << psInst->oversamplingSetting) + 2 ) / 4;
+	int32_t B3 = ( ( ((int32_t)calInst->ac1*4 + X3) << psInst->oversamplingSetting) + 2 ) / 4;
 
 	// Recalculate X1
-	X1 = (int32_t)psInst->ac3 * B6 / 8192;
+	X1 = (int32_t)calInst->ac3 * B6 / 8192;
 
 	// Recalculate X2
-	X2 = ((int32_t)psInst->b1 * ((B6*B6) / 4096)) / 65536;
+	X2 = ((int32_t)calInst->b1 * ((B6*B6) / 4096)) / 65536;
 
 	// Recalculate X3
 	X3 = ((X1 + X2) + 2) / 4;
 
 	// Calculate B4
-	uint32_t B4 = (uint32_t)psInst->ac4 * (uint32_t)(X3 + 32768) / 32768;
+	uint32_t B4 = (uint32_t)calInst->ac4 * (uint32_t)(X3 + 32768) / 32768;
 
 	// Calculate B7
 	uint32_t B7 = ((uint32_t)UP - B3)*(50000 >> psInst->oversamplingSetting);

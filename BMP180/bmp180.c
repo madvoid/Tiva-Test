@@ -24,6 +24,7 @@
 // Includes ------------------------------------------------------------------------------------------
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 #include "inc/hw_ints.h"
 #include "inc/hw_i2c.h"
@@ -138,20 +139,23 @@ int main(void){
 	// Create printing variable
 	uint32_t printValue[2];
 
-  // Initialize BMP180 and get calibration data
-  tBMP180 BmpSensHub;
-  BMP180Initialize(&BmpSensHub, 3);
-  BMP180GetCalVals(&BmpSensHub);
+	// Initialize BMP180 and get calibration data
+	//tBMP180 *BmpSensHub = malloc(sizeof(tBMP180));
+	tBMP180 BmpSensHub;
+	tBMP180Cals BmpSensHubCals;
+
+	BMP180Initialize(&BmpSensHub, 3);
+	BMP180GetCalVals(&BmpSensHub, &BmpSensHubCals);
 
 	while(1){
 
 		// Get & print temperature
-		BMP180GetTemp(&BmpSensHub);
+		BMP180GetTemp(&BmpSensHub, &BmpSensHubCals);
 		FloatToPrint(BmpSensHub.temp, printValue);
-		UARTprintf("%d.%03d,",printValue[0], printValue[1]);
+		UARTprintf("%d.%03d, ",printValue[0], printValue[1]);
 
 		// Get & print pressure
-		BMP180GetPressure(&BmpSensHub);
+		BMP180GetPressure(&BmpSensHub, &BmpSensHubCals);
 		UARTprintf("%d\n", BmpSensHub.pressure);
 
 		// Blink LED
@@ -160,7 +164,6 @@ int main(void){
 		ROM_GPIOPinWrite(GPIO_PORTF_BASE, LED_RED|LED_GREEN|LED_BLUE, 0);
 
 		// Delay for second
-		// Don't want to go much faster than this to reduce self heating
 		ROM_SysCtlDelay(ROM_SysCtlClockGet()/3);
 	}
 

@@ -61,6 +61,7 @@ CFLAGS=${FILENAME}.c       \
 # Linker flags
 # Note: Any object files from any driverlib files needs to be appended to the LDFLAGS below in the
 #	format of ${DRIVEOBJROOT}/driverlibfile.o
+#	To see map file, use -Map=bmp180.map as a flag
 LDFLAGS=-T                 \
         ${FILENAME}.ld     \
         --entry ResetISR   \

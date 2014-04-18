@@ -57,6 +57,13 @@ typedef struct
 	uint32_t tempRawVals[2];
 	uint32_t presRawVals[3];
 
+	int32_t pressure;
+
+	float temp;
+} tBMP180;
+
+typedef struct
+{
 	int16_t  ac1;
 	int16_t  ac2;
 	int16_t  ac3;
@@ -68,19 +75,15 @@ typedef struct
 	int16_t  mb;
 	int16_t  mc;
 	int16_t  md;	
-
-	float temp;
-	int32_t pressure;
-
-} tBMP180;
+} tBMP180Cals;
 
 
 
 // Function Prototypes -------------------------------------------------------------------------------
 extern void BMP180Initialize(tBMP180 *psInst, uint8_t oss);
-extern void BMP180GetCalVals(tBMP180 *psInst);
+extern void BMP180GetCalVals(tBMP180 *psInst, tBMP180Cals *calInst);
 extern void BMP180GetRawTemp(tBMP180 *psInst);
-extern void BMP180GetTemp(tBMP180 *psInst);
+extern void BMP180GetTemp(tBMP180 *psInst, tBMP180Cals *calInst);
 extern void BMP180GetRawPressure(tBMP180 *psInst, int oss);
-extern void BMP180GetPressure(tBMP180 *psInst);
+extern void BMP180GetPressure(tBMP180 *psInst, tBMP180Cals *calInst);
 

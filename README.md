@@ -25,11 +25,16 @@ Alternatively, you could just run the makefile to compile the code. As an altern
 
 Due to my inability to write proper makefiles, for any `driverlib` files that are used in the code, the corresponding `.o` file must be manually added to the Makefile's linker flags. In addition, any `.c` files used from the TivaWare `utils` folder must be added manually. See the makefiles for examples.
 
+## Stack Size ##
+The default stack size for the TivaWare examples are fairly small (256 bytes). To change the stack size to something larger, one must edit the `pui32Stack` variable on line 51 of `startup_gcc.c`. The default array size for this variable is 64, which is 256 bytes. What it should be changed to is context dependent.
 
-# Project Descriptions ##
+---
+# Project Descriptions #
 *	**Blink** - Blinks an LED on and off
 *	**Print** - Prints to COM port and notifies user of LED status changes
 *	**Echo** - Repeats user-entered serial input back to user
 *	**Timers** - Blinks LEDs based on timer interrupts
 *	**Countdown** - Counts down from 10 on serial monitor/LEDs and signals end of time
 *	**SHT21** - Interfaces with Sensirion SHT21 sensor on SensorHub Boosterpack
+*	**BMP180** - Interfaces with Bosch BMP180 pressure sensor on SensorHub Boosterpack
+*	**ISL29023** - Interfaces with Intersil ISL29023 ambient light and infrared sensor on SensorHub Boosterpack
