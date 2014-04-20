@@ -28,7 +28,6 @@ Due to my inability to write proper makefiles, for any `driverlib` files that ar
 ## Stack Size ##
 The default stack size for the TivaWare examples are fairly small (256 bytes). To change the stack size to something larger, one must edit the `pui32Stack` variable on line 51 of `startup_gcc.c`. The default array size for this variable is 64, which is 256 bytes. What it should be changed to is context dependent.
 
----
 # Project Descriptions #
 *	**Blink** - Blinks an LED on and off
 *	**Print** - Prints to COM port and notifies user of LED status changes
@@ -38,3 +37,4 @@ The default stack size for the TivaWare examples are fairly small (256 bytes). T
 *	**SHT21** - Interfaces with Sensirion SHT21 sensor on SensorHub Boosterpack
 *	**BMP180** - Interfaces with Bosch BMP180 pressure sensor on SensorHub Boosterpack
 *	**ISL29023** - Interfaces with Intersil ISL29023 ambient light and infrared sensor on SensorHub Boosterpack
+*	**Sleep** - Demonstrates Launchpad hibernate mode. Goes into hibernate mode automatically, press SW2 to put Launchpad into programming mode.

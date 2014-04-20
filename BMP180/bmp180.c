@@ -140,12 +140,15 @@ int main(void){
 	uint32_t printValue[2];
 
 	// Initialize BMP180 and get calibration data
-	//tBMP180 *BmpSensHub = malloc(sizeof(tBMP180));
 	tBMP180 BmpSensHub;
 	tBMP180Cals BmpSensHubCals;
-
+	
 	BMP180Initialize(&BmpSensHub, 3);
 	BMP180GetCalVals(&BmpSensHub, &BmpSensHubCals);
+
+	// Malloc testing
+	// tBMP180 *structTest = malloc(sizeof(tBMP180));
+	// BMP180Initialize(structTest, 3);
 
 	while(1){
 
