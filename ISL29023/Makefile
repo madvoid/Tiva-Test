@@ -41,6 +41,7 @@ DRIVOBJROOT=${ROOT}/driverlib/gcc
 CFLAGS=${FILENAME}.c       \
        startup_gcc.c       \
        ${ROOT}/utils/uartstdio.c \
+       islLib.c            \
        -g                  \
        -mthumb             \
        ${CPU}              \
@@ -72,6 +73,7 @@ LDFLAGS=-T                 \
 	${DRIVOBJROOT}/sysctl.o \
         ${DRIVOBJROOT}/uart.o   \
         uartstdio.o \
+        islLib.o \
 
 
 
