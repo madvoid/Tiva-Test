@@ -25,6 +25,7 @@
 
 #include "inc/hw_ints.h"
 #include "inc/hw_memmap.h"
+#include "inc/hw_watchdog.h"
 
 #include "driverlib/fpu.h"
 #include "driverlib/gpio.h"
@@ -82,6 +83,12 @@ void FloatToPrint(float floatValue, uint32_t splitValue[2]){
 	splitValue[1] = i32FractionPart;
 }
 
+void WatchdogHandler(void){
+	ROM_WatchdogIntClear(WATCHDOG0_BASE);
+	ROM_GPIOPinWrite(GPIO_PORTF_BASE, LED_RED|LED_GREEN|LED_BLUE, LED_RED);
+	//UARTprintf("End of handler\n");
+}
+
 
 
 // Main ----------------------------------------------------------------------------------------------
@@ -96,6 +103,10 @@ int main(void){
 	// Initialize Watchdog
 	ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_WDOG0);
 
+	// Enable interrupts
+	ROM_IntMasterEnable();
+	ROM_IntEnable(INT_WATCHDOG);
+
 	// Initialize the UART and write status.
 	ConfigureUART();
 	UARTprintf("Watchdog Example\n");
@@ -105,20 +116,32 @@ int main(void){
 	ROM_GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, LED_RED|LED_BLUE|LED_GREEN);
 	ROM_GPIOPinWrite(GPIO_PORTF_BASE, LED_RED|LED_GREEN|LED_BLUE, LED_GREEN);
 
+	// Unlock Watchdog
 	if(ROM_WatchdogLockState(WATCHDOG0_BASE) == true){
 		ROM_WatchdogUnlock(WATCHDOG0_BASE);
 	}
 
+	// Enable Watchdog Interrupts
+	ROM_WatchdogIntEnable(WATCHDOG0_BASE);
+	ROM_WatchdogIntTypeSet(WATCHDOG0_BASE, WATCHDOG_INT_TYPE_INT);
+
+	// Set Watchdog Properties
 	ROM_WatchdogReloadSet(WATCHDOG0_BASE, 6*ROM_SysCtlClockGet());
 	ROM_WatchdogResetEnable(WATCHDOG0_BASE);
-	ROM_WatchdogEnable(WATCHDOG0_BASE);
 	ROM_WatchdogLock(WATCHDOG0_BASE);
+
+	// Enable Watchdog
+	ROM_WatchdogEnable(WATCHDOG0_BASE);
 
 	uint32_t k = 1;
     	while(1){
 		UARTprintf("K = %d\n",k);
 		ROM_SysCtlDelay(ROM_SysCtlClockGet()/3);
 		k++;
+		if(k == 15){
+			ROM_WatchdogEnable(WATCHDOG0_BASE);
+			ROM_GPIOPinWrite(GPIO_PORTF_BASE, LED_RED|LED_GREEN|LED_BLUE, LED_GREEN);
+		}
 	}	
 
 }
