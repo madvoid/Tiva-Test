@@ -6,14 +6,34 @@
 #
 # Credits:
 #	Countless makefile tutorials; makedefs from TivaWare
+#	Mauro Scomparin's Stellaris Launchpad Makefile - https://github.com/scompo/stellaris-launchpad-template-gcc/blob/master/Makefile
 #
 # Requirements:
 #	None
 #
 # Description:
-#	Simple makefile for use with arm-non-eabi-gcc and Tiva Launchpad. Upload code to Launchpad with
+#	Simple makefile for use with arm-none-eabi-gcc and Tiva Launchpad. Upload code to Launchpad with 
 #	'lm4flash timers.bin'
 # ****************************************************************************************************
+
+
+# ----------------------------------------------------------------------------------------------------
+# Filepaths
+# ----------------------------------------------------------------------------------------------------
+ROOT = /Users/Nipun/Documents/TivaWare
+DRIVOBJROOT = ${ROOT}/driverlib/gcc
+UTILSROOT = ${ROOT}/utils
+
+
+
+
+# ----------------------------------------------------------------------------------------------------
+# Project properties
+# ----------------------------------------------------------------------------------------------------
+FILENAME = bmp180
+STARTUP_FILE = startup_gcc
+LINKER_FILE = ${FILENAME}.ld
+EXTERN_FILES = ${UTILSROOT}/uartstdio.c
 
 
 
@@ -22,27 +42,23 @@
 # Definitions
 # ----------------------------------------------------------------------------------------------------
 
-FILENAME=bmp180
+# Compiler prefix
+PREFIX = arm-none-eabi
 
 # Compiler, linker, etc.
-CC=arm-none-eabi-gcc
-LD=arm-none-eabi-ld
-OBJCOPY=arm-none-eabi-objcopy
+CC = ${PREFIX}-gcc
+LD = ${PREFIX}-ld
+OBJCOPY = ${PREFIX}-objcopy
+OBJDUMP = ${PREFIX}-objdump
 
 # Compiler CPU/FPU options
-CPU=-mcpu=cortex-m4
-FPU=-mfpu=fpv4-sp-d16 -mfloat-abi=softfp
-
-# Filepaths
-ROOT=/Users/Nipun/Documents/TivaWare
-DRIVOBJROOT=${ROOT}/driverlib/gcc
+CPU = -mcpu=cortex-m4
+FPU = -mfpu=fpv4-sp-d16 -mfloat-abi=softfp
+PART = TM4C123GH6PM
 
 # Compiler flags
-CFLAGS=${FILENAME}.c       \
-       startup_gcc.c       \
-       ${ROOT}/utils/uartstdio.c \
-       bmpLib.c            \
-       -g                  \
+CFLAGS=-g                  \
+       -c                  \
        -mthumb             \
        ${CPU}              \
        ${FPU}              \
@@ -52,42 +68,57 @@ CFLAGS=${FILENAME}.c       \
        -std=c99            \
        -Wall               \
        -pedantic           \
-       -DPART_TM4C123GH6PM \
-       -c                  \
+       -DPART_${PART}      \
        -Os                 \
        -I${ROOT}           \
        -DTARGET_IS_BLIZZARD_RB1 \
 
 # Linker flags
-# Note: Any object files from any driverlib files needs to be appended to the LDFLAGS below in the
-#	format of ${DRIVEOBJROOT}/driverlibfile.o
-#	To see map file, use -Map=bmp180.map as a flag
-LDFLAGS=-T                 \
-        ${FILENAME}.ld     \
-        --entry ResetISR   \
+LDFLAGS=--entry ResetISR   \
 	--gc-sections      \
-	-o a.out startup_gcc.o ${FILENAME}.o \
-        ${DRIVOBJROOT}/fpu.o    \
-	${DRIVOBJROOT}/gpio.o   \
-        ${DRIVOBJROOT}/interrupt.o \
-	${DRIVOBJROOT}/i2c.o    \
-	${DRIVOBJROOT}/sysctl.o \
-        ${DRIVOBJROOT}/uart.o   \
-        uartstdio.o \
-        bmpLib.o    \
+
+# Objectcopy flags
+CPFLAGS = -O binary
+
+# Objectdump flags
+ODFLAGS = -S
+
+# Lm4flash flags
+UPFLAGS = -v
+
+# Libgcc, libc, and libm paths
+LIB_GCC_PATH=${shell ${CC} ${CFLAGS} -print-libgcc-file-name}
+LIBC_PATH=${shell ${CC} ${CFLAGS} -print-file-name=libc.a}
+LIBM_PATH=${shell ${CC} ${CFLAGS} -print-file-name=libm.a}
+
+# Files
+SRC = ${wildcard *.c} ${EXTERN_FILES}
+OBJS = ${SRC:.c=.o}
+
 
 
 
 # ----------------------------------------------------------------------------------------------------
 # Rules
 # ----------------------------------------------------------------------------------------------------
-all:
-	@${CC} ${CFLAGS}
-	@${LD} ${LDFLAGS}
-	@${OBJCOPY} -O binary a.out ${FILENAME}.bin
+all: ${OBJS} ${FILENAME}.axf ${FILENAME}
+
+%.o: %.c ${EXTERN_FILES}
+	@echo Compiling ${<}...
+	@${CC} ${CFLAGS} ${<} -o ${@}
+
+${FILENAME}.axf: ${OBJS}
+	@echo Linking...
+	@${LD} -T ${LINKER_FILE} ${LDFLAGS} -o ${FILENAME}.axf ${OBJS} ${DRIVOBJROOT}/libdriver.a ${LIBM_PATH} ${LIBC_PATH} ${LIB_GCC_PATH}
+
+${FILENAME}: ${FILENAME}.axf
+	@echo Copying...
+	@${OBJCOPY} ${CPFLAGS} ${FILENAME}.axf ${FILENAME}.bin
+	@echo Dumping...
+	@${OBJDUMP} ${ODFLAGS} ${FILENAME}.axf > ${FILENAME}.lst
 
 upload:
-	lm4flash ${FILENAME}.bin
+	lm4flash ${UPFLAGS} ${FILENAME}.bin
 
 clean:
-	rm -fv *.o *.d a.out ${FILENAME}.bin
+	rm -fv *.o *.d *.axf *.bin *.lst

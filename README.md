@@ -19,22 +19,25 @@ Since I develop on a Mac, here's what I did to get everything working properly:
 	5. Run `lm4flash blinky.bin`. The built-in LED should start blinking
 
 ## Compiling ##
-The last three lines of the Makefile from [this](https://github.com/madvoid/Tiva-Test/commit/182c6fb441e81f4dc0d1d8470427f55eae63c145) commit show the commands that I use to compile code and upload it to the Launchpad. You will need to change the file names to whatever you are using, and change the path after the `-I` flag to wherever your TivaWare base folder is located. I gathered all of these flags by a combination of [this](http://recursive-labs.com/blog/2012/10/28/stellaris-launchpad-gnu-linux-getting-started/) tutorial and examining the flags from the makefiles included with TivaWare. The files `startup_gcc.c` and `****.ld` were taken directly from the TivaWare examples. These files may not be the same for each project. For example, the `startup_gcc.c` file differs between the `print` project and the `echo` project, even though they are very similar.
+All code can be compiled by running ```make``` in the working directory. The makefile has been designed so that all files inside the working directory will be automatically compiled. However, any ```*.c``` files that live in external folders will need to be added to the ```EXTERN_FILES``` line, all separated by spaces. To summarize, the following steps will need to be completed to modify the makefile for other projects:
 
-Alternatively, you could just run the makefile to compile the code. As an alternative to running lm4flash, `make upload` will upload the binary application file to the Launchpad.
-
-Due to my inability to write proper makefiles, for any `driverlib` files that are used in the code, the corresponding `.o` file must be manually added to the Makefile's linker flags. In addition, any `.c` files used from the TivaWare `utils` folder must be added manually. See the makefiles for examples.
+1. Change the TivaWare root path on line 24 to whatever you're using.
+2. Change the filename on line 33 to whatever your filename is called. This assumes that your filename is also the one used for the linker file, and that your startup file is called ```startup_gcc.c```.
+3. Add any external ```*.c``` files to line 36, separated by spaces.
 
 ## Stack Size ##
 The default stack size for the TivaWare examples are fairly small (256 bytes). To change the stack size to something larger, one must edit the `pui32Stack` variable on line 51 of `startup_gcc.c`. The default array size for this variable is 64, which is 256 bytes. What it should be changed to is context dependent.
 
 # Project Descriptions #
 *	**Blink** - Blinks an LED on and off
-*	**Print** - Prints to COM port and notifies user of LED status changes
-*	**Echo** - Repeats user-entered serial input back to user
-*	**Timers** - Blinks LEDs based on timer interrupts
-*	**Countdown** - Counts down from 10 on serial monitor/LEDs and signals end of time
-*	**SHT21** - Interfaces with Sensirion SHT21 sensor on SensorHub Boosterpack
 *	**BMP180** - Interfaces with Bosch BMP180 pressure sensor on SensorHub Boosterpack
+*	**Countdown** - Counts down from 10 on serial monitor/LEDs and signals end of time
+*	**Debug Test** - Used to test debugging. Code just blinks LED
+*	**Echo** - Repeats user-entered serial input back to user
 *	**ISL29023** - Interfaces with Intersil ISL29023 ambient light and infrared sensor on SensorHub Boosterpack
+*	**Print** - Prints to COM port and notifies user of LED status changes
+*	**SHT21** - Interfaces with Sensirion SHT21 sensor on SensorHub Boosterpack
 *	**Sleep** - Demonstrates Launchpad hibernate mode. Goes into hibernate mode automatically, press SW2 to put Launchpad into programming mode.
+*	**Templates** - Basic templates for use in projects
+*	**Timers** - Blinks LEDs based on timer interrupts
+*	**Watchdog** - Enables watchdog timer

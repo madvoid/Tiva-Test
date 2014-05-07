@@ -22,6 +22,10 @@
 *.x86_64
 *.hex
 *.bin
+*.axf
+
+# Dump files
+*.lst
 
 # Dependencies
 *.d
