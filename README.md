@@ -8,7 +8,7 @@ Since I develop on a Mac, here's what I did to get everything working properly:
 
 1. Install Xcode and Xcode command line tools
 2. Install Macports
-3. Using Macports, install arm-none-eabi-gcc and libusb
+3. Using Macports, install ```arm-none-eabi-gcc``` and ```libusb```
 4. Install [lm4tools](https://github.com/utzig/lm4tools)
 5. Download [TivaWare](http://www.ti.com/tool/sw-tm4c) from Texas Instruments. It will probably be an exe file. Extract it and move the TivaWare folder to wherever you would like to keep it. `cd` into the folder and run `make`. This should be enough to get TivaWare fully compiled on a Mac.
 6. Test everything:
@@ -32,7 +32,7 @@ The default stack size for the TivaWare examples are fairly small (256 bytes). T
 *	**Blink** - Blinks an LED on and off
 *	**BMP180** - Interfaces with Bosch BMP180 pressure sensor on SensorHub Boosterpack
 *	**Countdown** - Counts down from 10 on serial monitor/LEDs and signals end of time
-*	**Debug Test** - Used to test debugging. Code just blinks LED
+*	**Debug Test** - Used to test debugging. Code just blinks LED. See folder for instructions on how to debug.
 *	**Echo** - Repeats user-entered serial input back to user
 *	**ISL29023** - Interfaces with Intersil ISL29023 ambient light and infrared sensor on SensorHub Boosterpack
 *	**Print** - Prints to COM port and notifies user of LED status changes
