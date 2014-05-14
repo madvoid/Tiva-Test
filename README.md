@@ -18,12 +18,15 @@ Since I develop on a Mac, here's what I did to get everything working properly:
 	4. Plug in the Launchpad
 	5. Run `lm4flash blinky.bin`. The built-in LED should start blinking
 
-## Compiling ##
+## Compiling & Uploading##
 All code can be compiled by running ```make``` in the working directory. The makefile has been designed so that all files inside the working directory will be automatically compiled. However, any ```*.c``` files that live in external folders will need to be added to the ```EXTERN_FILES``` line, all separated by spaces. To summarize, the following steps will need to be completed to modify the makefile for other projects:
 
 1. Change the TivaWare root path on line 24 to whatever you're using.
 2. Change the filename on line 33 to whatever your filename is called. This assumes that your filename is also the one used for the linker file, and that your startup file is called ```startup_gcc.c```.
 3. Add any external ```*.c``` files to line 36, separated by spaces.
+
+Programs can be uploaded by running ```make upload```. It should not be necessary to compile before running ```make upload```. Cleaning can be done with ```make clean```.
+
 
 ## Stack Size ##
 The default stack size for the TivaWare examples are fairly small (256 bytes). To change the stack size to something larger, one must edit the `pui32Stack` variable on line 51 of `startup_gcc.c`. The default array size for this variable is 64, which is 256 bytes. What it should be changed to is context dependent.
