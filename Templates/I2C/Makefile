@@ -117,7 +117,7 @@ ${FILENAME}: ${FILENAME}.axf
 	@echo Dumping...
 	@${OBJDUMP} ${ODFLAGS} ${FILENAME}.axf > ${FILENAME}.lst
 
-upload:
+upload: ${FILENAME}
 	lm4flash ${UPFLAGS} ${FILENAME}.bin
 
 clean:

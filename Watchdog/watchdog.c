@@ -135,7 +135,7 @@ int main(void){
 
 	uint32_t k = 1;
     	while(1){
-		UARTprintf("K = %d\n",k);
+		UARTprintf("k = %d\n",k);
 		ROM_SysCtlDelay(ROM_SysCtlClockGet()/3);
 		k++;
 		if(k == 15){
