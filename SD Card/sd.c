@@ -53,8 +53,9 @@
 
 
 // Variables -----------------------------------------------------------------------------------------
-FATFS FatFs;			// FatFs work area needed for each volume
-FIL Fil;			// File object needed for each open file
+FATFS sdVolume;			// FatFs work area needed for each volume
+FIL logfile;			// File object needed for each open file
+uint16_t fp;			// Used for sizeof
 
 
 
@@ -93,6 +94,12 @@ void FloatToPrint(float floatValue, uint32_t splitValue[2]){
 	splitValue[1] = i32FractionPart;
 }
 
+void fatalError(char errMessage[]){
+	UARTprintf(errMessage);
+	ROM_GPIOPinWrite(GPIO_PORTF_BASE, LED_RED|LED_GREEN|LED_BLUE, LED_RED);
+	while(1);
+}
+
 
 
 // Main ----------------------------------------------------------------------------------------------
@@ -106,7 +113,7 @@ int main(void){
 
 	// Initialize the UART and write status.
 	ConfigureUART();
-	UARTprintf("Basic Example\n");
+	UARTprintf("SD Example\n");
 
 	// Enable LEDs
 	ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
@@ -118,12 +125,33 @@ int main(void){
 	// Initialize result variable
 	UINT bw;
 
-	// Give a work area to the default drive
-	f_mount(&FatFs, "", 0);
+	// Mount the SD Card
+	switch(f_mount(&sdVolume, "", 0)){
+		case FR_OK:
+			UARTprintf("SD Card mounted successfully\n");
+			break;
+		case FR_INVALID_DRIVE:
+			fatalError("ERROR: Invalid drive number\n");
+			break;
+		case FR_DISK_ERR:
+			fatalError("ERROR: DiskIO error - Check hardware!\n");
+			break;
+		case FR_NOT_READY:
+			fatalError("ERROR: Medium removal or disk_initialize\n");
+			break;
+		case FR_NO_FILESYSTEM:
+			fatalError("ERROR: No valid FAT volume on drive\n");
+			break;
+		default:
+			fatalError("ERROR: Something went wrong\n");
+			break;
+	}
 
-	if (f_open(&Fil, "newfile.txt", FA_WRITE | FA_CREATE_ALWAYS) == FR_OK) {	// Create a file
-		f_write(&Fil, "It works!\r\n", 11, &bw);				// Write data to the file
-		f_close(&Fil);								// Close the file
+	if(f_open(&logfile, "newfile.txt", FA_WRITE | FA_OPEN_ALWAYS) == FR_OK) {	// Open file - If nonexistent, create
+		f_lseek(&logfile, logfile.fsize);					// Move forward by filesize; logfile.fsize+1 is not needed in this application
+		f_write(&logfile, "Parachutes\n", 11, &bw);				// Append word
+		UARTprintf("File size is %u\n",logfile.fsize);				// Print size
+		f_close(&logfile);							// Close the file
 		if (bw == 11) {
 			ROM_GPIOPinWrite(GPIO_PORTF_BASE, LED_RED|LED_GREEN|LED_BLUE, LED_GREEN); // Lights green LED if data written well
 		}
