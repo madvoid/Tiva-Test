@@ -8,7 +8,7 @@ Since I develop on a Mac, here's what I did to get everything working properly:
 
 1. Install Xcode and Xcode command line tools
 2. Install Macports
-3. Using Macports, install ```arm-none-eabi-gcc``` and ```libusb```
+3. Using Macports, install ```arm-none-eabi-gcc``` and ```libusb```. As of now, the included makefiles only work with ```arm-none-eabi``` tools obtained through Macports. They do *not* work with ```arm-none-eabi``` tools obtained from [launchpad.net](https://launchpad.net/gcc-arm-embedded). If I have time, I will try to find a fix for that.
 4. Install [lm4tools](https://github.com/utzig/lm4tools)
 5. Download [TivaWare](http://www.ti.com/tool/sw-tm4c) from Texas Instruments. It will probably be an exe file. Extract it and move the TivaWare folder to wherever you would like to keep it. `cd` into the folder and run `make`. This should be enough to get TivaWare fully compiled on a Mac.
 6. Test everything:
